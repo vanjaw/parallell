@@ -56,7 +56,7 @@ void loop(int threadNr){
 }
 
 void manual(char *program){
-    std::cout << "Manual: type " << program << " N (where N > 0)" << std::endl;
+    std::cout << "Manual: type " << program << " N (where N=nr of threads > 0 and M=nr of trapezes > 0)" << std::endl;
     exit(1);
 }
 
