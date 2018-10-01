@@ -36,7 +36,7 @@ void checkForPrimes(int start, int end, int threadNr){
 }
 
 void manual(char *program){
-    std::cout << "Manual: type " << program << " N (where N > 0)" << std::endl;
+    std::cout << "Manual: type " << program << " N (nr of threads where N > 0) M (max value where M >0)" << std::endl;
     exit(1);
 }
 
