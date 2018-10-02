@@ -9,18 +9,19 @@
 #include <iostream>
 #include <math.h>
 #include <thread>
+#include <vector>
 
 int k;
 int nrOfThreads;
 int MAX;
-int array[] = {};
+std::vector<int> values;
 
 
 void algoritm(int k){
     int startValue = (k*k)-1;
     for (int i = startValue; i<(MAX); i++){
-        if ((array[i] % k) == 0){
-            array[i]=0;
+        if ((values[i] % k) == 0){
+            values[i]=0;
         };
     };
 }
@@ -60,10 +61,15 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
         manual(argv[0]);
     }
     
-    // Fill array 1:MAX
+ 
+    std::cout << "innan vektor fylls"<< std::endl;
+   
+    // Fill vector 1:MAX
     for (int i=0; i<MAX; i++){
-        array [i] = i+1;
+        values.push_back(i+1);
     }
+    
+    std::cout << "efter vektor fylls"<< std::endl;
     
     int sqrtMAX = sqrt(MAX);
     int chunks = MAX - sqrtMAX;
@@ -99,8 +105,8 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
     // PRINT OUT PRIMES
     std::cout << "Primes are: "<< std::endl;
     for (int i=2; i<MAX; i++){
-        if (array[i] != 0){
-        std::cout << array[i] << ", " << std::endl;
+        if (values[i] != 0){
+        std::cout << values[i] << ", " << std::endl;
         }
     }
     
