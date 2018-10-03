@@ -1,39 +1,48 @@
-//
-//  main.cpp
-//  Assignment12
-//
-//  Created by Vanjas on 2018-09-27.
-//  Copyright © 2018 Vanjas. All rights reserved.
-//
-
 #include <iostream>
 #include <math.h>
-#include <thread>
+//#include <thread>
 #include <vector>
-
-int k;
-int nrOfThreads;
-int MAX;
-std::vector<int> values;
+#include <pthread.h>
+#include <unistd.h>
 
 
-void algoritm(int k){
-    int startValue = (k*k)-1;
-    for (int i = startValue; i<(MAX); i++){
-        if ((values[i] % k) == 0){
-            values[i]=0;
+std::mutex out;
+long k;
+long nrOfThreads;
+long MAX;
+std::vector<long> numbers;
+
+struct values {
+    long startValue;
+    long endValue;
+    long threadNr;
+};
+
+void algoritm(long k, long threadnr){
+    long startValue = (k*k)-1;
+    for (long i = startValue; i<(MAX); i++){
+        if ((numbers[i] % k) == 0){
+            
+            numbers[i]=0;
         };
     };
 }
 
-void checkForPrimes(int start, int end, int threadNr){
+static void *checkForPrimes(void *v){
+    long start = ((struct values *)v)->startValue;
+    long end = ((struct values *)v)->endValue;
+    long threadNr = ((struct values *)v)->threadNr;
+    
     // CHECK FOR PRIMES
+    out.lock();
     std::cout << "Thread " << threadNr << " is working with start: " << start << " and end: " << end  << std::endl;
-    for (int k = start; k<=end; k++){
+    out.unlock();
+    for (long k = start; k<=end; k++){
         if (k != 0){
-            algoritm(k);
+            algoritm(k, threadNr);
         }
     }
+    return NULL;
 }
 
 void manual(char *program){
@@ -61,56 +70,64 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
         manual(argv[0]);
     }
     
- 
-    std::cout << "innan vektor fylls"<< std::endl;
-   
     // Fill vector 1:MAX
-    for (int i=0; i<MAX; i++){
-        values.push_back(i+1);
+    for (long i=0; i<MAX; i++){
+        numbers.push_back(i+1);
     }
     
-    std::cout << "efter vektor fylls"<< std::endl;
+    long sqrtMAX = sqrt(MAX);
+    long chunks = MAX - sqrtMAX;
+    long ChunkPerThread = (chunks+1)/(long)nrOfThreads;
     
-    int sqrtMAX = sqrt(MAX);
-    int chunks = MAX - sqrtMAX;
-    int ChunkPerThread = (chunks+1)/(int)nrOfThreads;
-   
     if (ChunkPerThread < 1){
         ChunkPerThread = 1;
         nrOfThreads = MAX-sqrtMAX;
     };
-    
+    out.lock();
     std::cout << "SCRT: " << sqrtMAX << std::endl;
     std::cout << "Chunks: " << chunks << std::endl;
     std::cout << "Chunk per thread: " << ChunkPerThread << std::endl;
     std::cout << "Threads: " << nrOfThreads << std::endl;
+    out.unlock();
     
-    std::thread *th = new std::thread[nrOfThreads];
-    for (int i=0; i < nrOfThreads; ++i){
-        
-        int startValue = sqrtMAX+(i*ChunkPerThread)+1;
-        int endValue = startValue + ChunkPerThread-1;
+    pthread_t threads[nrOfThreads];
+    struct values listOfValues[nrOfThreads];
+    //std::thread *th = new std::thread[nrOfThreads];
+    for (long i=0; i < nrOfThreads; ++i){
+        long startValue = (i*ChunkPerThread)+1;
+        long endValue = startValue + ChunkPerThread-1;
         
         if (i == 0) {
             startValue = 2;
-            endValue = sqrtMAX+ChunkPerThread;
+            endValue = ChunkPerThread;
         }
         else if (i == (nrOfThreads-1)) {
             endValue = MAX;
         }
-        th[i] = std::thread(checkForPrimes, startValue, endValue, i);
-        th[i].join();
+        listOfValues[i].startValue = startValue;
+        listOfValues[i].endValue = endValue;
+        listOfValues[i].threadNr = i;
+        // th[i] = std::thread(checkForPrimes, startValue, endValue, i);
+        pthread_create(&threads[i], NULL, &checkForPrimes, &listOfValues[i]);
     }
+    out.lock();
+    std::cout << "JOINED" << std::endl;
+    out.unlock();
     
-    // PRINT OUT PRIMES
+    //th[0].join();
+    //std::this_thread::sleep_for (std::chrono::seconds(1));
+    pthread_join(threads[0], NULL);
+    sleep(1);
+    
+    //PRINT OUT PRIMES
+    out.lock();
     std::cout << "Primes are: "<< std::endl;
-    for (int i=2; i<MAX; i++){
-        if (values[i] != 0){
-        std::cout << values[i] << ", " << std::endl;
+    for (long i=2; i<MAX; i++){
+        if (numbers[i] != 0){
+            std::cout << numbers[i] << ", " << std::endl;
         }
     }
-    
-    delete[] th;
+    out.unlock();
     return 0;
     
 };
