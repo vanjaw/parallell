@@ -2,6 +2,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <string.h>
 
 double area;
 double slice;
@@ -60,11 +61,16 @@ void manual(char *program){
     exit(1);
 }
 
+
+
 int main(int argc, char *argv[]){
+    if((argc == 1) && (strcmp(argv[1],"-h") == 0)){
+    	manual(argv[0]);
+    }
     if(argc != 3){
         manual(argv[0]);
     }
-    int nrOfThreads;
+       int nrOfThreads;
     try{
         nrOfThreads = std::stoi(argv[1]);
     }
@@ -86,10 +92,10 @@ int main(int argc, char *argv[]){
     std::thread *trap = new std::thread[nrOfThreads];
     for (int i=0; i < nrOfThreads; ++i){
         trap[i] = std::thread(loop, i);
-        trap[i].join();
+       // trap[i].join();
     }
     
-//    trap[0].join();
+    trap[0].join();
 
     delete[] trap;
     
