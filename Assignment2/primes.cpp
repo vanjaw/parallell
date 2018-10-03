@@ -7,42 +7,47 @@
 
 
 std::mutex out;
-long k;
 long nrOfThreads;
 long MAX;
+long sqrtMAX;
 std::vector<long> numbers;
+std::vector<long> seeds;
 
 struct values {
     long startValue;
     long endValue;
-    long threadNr;
 };
 
-void algoritm(long k, long threadnr){
-    long startValue = (k*k)-1;
-    for (long i = startValue; i<(MAX); i++){
-        if ((numbers[i] % k) == 0){
-            
-            numbers[i]=0;
-        };
-    };
-}
-
-static void *checkForPrimes(void *v){
+void *calculatePrimes(void *v){
     long start = ((struct values *)v)->startValue;
     long end = ((struct values *)v)->endValue;
-    long threadNr = ((struct values *)v)->threadNr;
     
-    // CHECK FOR PRIMES
-    out.lock();
-    std::cout << "Thread " << threadNr << " is working with start: " << start << " and end: " << end  << std::endl;
-    out.unlock();
-    for (long k = start; k<=end; k++){
-        if (k != 0){
-            algoritm(k, threadNr);
+    for (long i=1; i<sqrtMAX; i++){
+        long k = seeds[i];
+        
+        if (k!=0){
+            for (long j = start; j<end; j++){
+                if ((numbers[j] % k) == 0){
+                    numbers[j]=0;
+                }
+            }
         }
     }
     return NULL;
+}
+
+void calculateSeeds(){
+    for (long i=1; i<sqrtMAX; i++){
+        long k = seeds[i];
+        if (k!=0){
+            long startValue = (k*k)-1;
+            for (long x = startValue; x<sqrtMAX; x++){
+                if ((seeds[x] % k) == 0){
+                    seeds[x]=0;
+                };
+            }
+        }
+    }
 }
 
 void manual(char *program){
@@ -70,12 +75,7 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
         manual(argv[0]);
     }
     
-    // Fill vector 1:MAX
-    for (long i=0; i<MAX; i++){
-        numbers.push_back(i+1);
-    }
-    
-    long sqrtMAX = sqrt(MAX);
+    sqrtMAX = sqrt(MAX);
     long chunks = MAX - sqrtMAX;
     long ChunkPerThread = (chunks+1)/(long)nrOfThreads;
     
@@ -83,6 +83,15 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
         ChunkPerThread = 1;
         nrOfThreads = MAX-sqrtMAX;
     };
+    
+    // Fill vector 1:MAX
+    for (long i=0; i<MAX; i++){
+        numbers.push_back(i+1);
+    }
+    
+    for (long i=0; i<sqrtMAX; i++){
+        seeds.push_back(i+1);
+    }
     out.lock();
     std::cout << "SCRT: " << sqrtMAX << std::endl;
     std::cout << "Chunks: " << chunks << std::endl;
@@ -93,22 +102,27 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
     pthread_t threads[nrOfThreads];
     struct values listOfValues[nrOfThreads];
     //std::thread *th = new std::thread[nrOfThreads];
+    
+    calculateSeeds();
+    for (long a = 0; a < sqrtMAX; a++){
+        numbers[a] = seeds[a];
+    }
+    
     for (long i=0; i < nrOfThreads; ++i){
-        long startValue = (i*ChunkPerThread)+1;
-        long endValue = startValue + ChunkPerThread-1;
+        long startValue = sqrtMAX+(i*ChunkPerThread);
+        long endValue = startValue + ChunkPerThread;
         
-        if (i == 0) {
-            startValue = 2;
-            endValue = ChunkPerThread;
-        }
-        else if (i == (nrOfThreads-1)) {
+        /*  if (i == 0) {
+         startValue = 2;
+         endValue = sqrtMAX;
+         }*/
+        if (i == (nrOfThreads-1)) {
             endValue = MAX;
         }
         listOfValues[i].startValue = startValue;
         listOfValues[i].endValue = endValue;
-        listOfValues[i].threadNr = i;
         // th[i] = std::thread(checkForPrimes, startValue, endValue, i);
-        pthread_create(&threads[i], NULL, &checkForPrimes, &listOfValues[i]);
+        pthread_create(&threads[i], NULL, &calculatePrimes, &listOfValues[i]);
     }
     out.lock();
     std::cout << "JOINED" << std::endl;
@@ -122,7 +136,7 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
     //PRINT OUT PRIMES
     out.lock();
     std::cout << "Primes are: "<< std::endl;
-    for (long i=2; i<MAX; i++){
+    for (long i=1; i<MAX; i++){
         if (numbers[i] != 0){
             std::cout << numbers[i] << ", " << std::endl;
         }
@@ -132,19 +146,3 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
     
 };
 
-
-
-//1. Create a list of natural numbers: 1, 2, 3, . . . , Max.
-//2. Set k to 2, the first unmarked number in the list.
-//3. repeat
-//Mark all multiples of k between k2 and Max.
-//Find the smallest number greater than k that is still unmarked. Set k to this new value.
-//until k2 is greater than Max.
-//4. The unmarked numbers are all prime.
-
-//To parallelize this algorithm,
-//1. First sequentially compute primes up to √Max.
-//2. Given p cores, build p chunks of roughly equal length covering the range from √Max + 1 to Max,
-//and allocate a thread for each chunk.
-//3. Each thread uses the sequentially computed “seeds” to mark the numbers in its chunk.
-//4. The master waits for all threads to finish and collects the unmarked numbers.
