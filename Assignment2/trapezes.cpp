@@ -65,12 +65,12 @@ void manual(char *program){
 
 int main(int argc, char *argv[]){
     if((argc == 1) && (strcmp(argv[1],"-h") == 0)){
-    	manual(argv[0]);
+        manual(argv[0]);
     }
     if(argc != 3){
         manual(argv[0]);
     }
-       int nrOfThreads;
+    int nrOfThreads;
     try{
         nrOfThreads = std::stoi(argv[1]);
     }
@@ -89,18 +89,29 @@ int main(int argc, char *argv[]){
     
     slice = 1/(double)nrOfTrapezes; // The size of each trapeze
     
+    typedef std::chrono::high_resolution_clock clock; //for measuring time
+    
+    std::chrono::time_point<clock> start_time = clock::now();
+    
     std::thread *trap = new std::thread[nrOfThreads];
     for (int i=0; i < nrOfThreads; ++i){
         trap[i] = std::thread(loop, i);
-       // trap[i].join();
+        // trap[i].join();
     }
     
     trap[0].join();
-
-    delete[] trap;
+    
+    std::chrono::time_point<clock> end_time = clock::now();
+    double time = std::chrono::duration<double, std::ratio<1, 1000>>(end_time -start_time).count();
+    
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    
+    //delete[] trap;
     
     std::cout << "Area is estimated to: " << area << std::endl;
+    std::cout << "Computation time: " << time << std::endl;
     return 0;
     
 };
 
+    
