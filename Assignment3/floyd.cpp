@@ -31,9 +31,9 @@ int main (int argc, char * argv[]) {
 
 	array = allocate_array(N); //allocate array
 
-	for (k = 0 ; t < T ; t++) {
-		for (i = 1 ; i < N-1 ; i++)
-			for (j = 1 ; j < N-1 ; j++) {
+	for (k = 1 ; k < N ; t++) {
+		for (i = 1 ; i < N ; i++)
+			for (j = 1 ; j < N ; j++) {
 			
 			
 			}
