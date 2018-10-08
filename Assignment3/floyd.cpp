@@ -1,3 +1,7 @@
+#include <stdio>
+#include <stdlib.h>
+#include <chrono>
+
 /*
  * let V= number of vertices in graph
  * let dist = V x V array of minimum distances
@@ -22,7 +26,7 @@ int main (int argc, char * argv[]) {
 
 	/*Read input arguments*/
 	if (argc != 2) {
-		fprintf(stderr, "Usage: ./exec ArraySize TimeSteps\n");
+		fprintf(stderr, "Usage: ./exec ArraySize \n");
 		exit(-1);
 	}
 	else {
@@ -31,10 +35,14 @@ int main (int argc, char * argv[]) {
 
 	array = allocate_array(N); //allocate array
 
-	for (k = 1 ; k < N ; t++) {
+	for (k = 1 ; k < N ; k++) {
 		for (i = 1 ; i < N ; i++)
 			for (j = 1 ; j < N ; j++) {
-			
+				oldvalue = array[i][j];
+				newValue = array[i][k] + array[k][j];
+				if(oldvalue > newvalue){
+					array[i][j] = newValue;					
+				}	
 			
 			}
 	
@@ -43,7 +51,8 @@ int main (int argc, char * argv[]) {
 
 	
 	
-	}
+}
+
  
 static int ** allocate_array(int N) {
 	int ** array;
@@ -53,7 +62,8 @@ static int ** allocate_array(int N) {
 		array[i] = malloc(N * sizeof(int));
 	for (i = 0; i < N ; i++)
 		for (j = 0; j < N ; j++)
-			array[i][j] = 0;
+			randomnr = rand() % 10; //random value between 0 and 10
+			array[i][j] = randomnr;
 	return array;
 }
 
