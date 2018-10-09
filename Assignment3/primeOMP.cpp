@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <mutex>
 #include <omp.h>
-
+#include <chrono>
 
 long MAX;
 long sqrtMAX;
@@ -35,8 +35,8 @@ void manual(char *program){
 }
 
 int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
+   
     int nrOfThreads;
-
     if(argc != 3){
         manual(argv[0]);
     }
@@ -78,14 +78,17 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
     for (long a = 0; a < sqrtMAX; a++){
         numbers[a] = seeds[a];
     }
-    
 
+
+    typedef std::chrono::high_resolution_clock clock;
+    std::chrono::time_point<clock> start_time = clock::now();
+	    
     omp_set_num_threads(nrOfThreads);
     #pragma omp parallel
     {
     int ID = omp_get_thread_num();
     
-    std::cout << "ID: " << ID << std::endl;
+    //std::cout << "ID: " << ID << std::endl;
 
     long start = sqrtMAX + (ID*ChunkPerThread);
     long end = start + ChunkPerThread;
@@ -106,19 +109,22 @@ int main(int argc, char *argv[]){ // argc[2] = Max, argc[1] = nrOfThreads
             }
         }
     }
-    }
+    } // end of parallel part
 
+   std::chrono::time_point<clock> end_time = clock::now();
 
-
+   double time = std::chrono::duration<double, std::ratio<1, 1000>>(end_time - start_time).count();
 
 
     //PRINT OUT PRIMES
+    /*
     std::cout << "Primes are: "<< std::endl;
     for (long i=1; i<MAX; i++){
         if (numbers[i] != 0){
             std::cout << numbers[i] << ", " << std::endl;
         }
-    }
+    }*/
+    std::cout << "Time: " << time << std::endl;
     return 0;
     
 };
