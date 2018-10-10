@@ -78,7 +78,7 @@ static void work(int **previous, int **current, int N, int k){
 int main (int argc, char * argv[]) {
 	int N;					//size of array 			
 	int ** current,** previous, ** swap; 	//array
-	int k, nrOfThreads;		//helper variables
+	int k, nrOfThreads;			//helper variables
 
 	double time;
 	struct timeval ts,tf; 		//for timing
@@ -93,7 +93,7 @@ int main (int argc, char * argv[]) {
 		N = atoi(argv[1]);
 		nrOfThreads = atoi(argv[2]);
 	}
-	current =  allocate_array(N); //allocate array
+	current =  allocate_array(N); //allocate Orray
 	previous = allocate_array(N);
 
 	gettimeofday(&ts, NULL);
