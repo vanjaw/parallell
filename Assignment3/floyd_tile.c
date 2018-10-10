@@ -76,8 +76,8 @@ static void compute_tile(int **previous, int **current, int starti, int startj, 
  
 int main (int argc, char * argv[]) {
 	int N;						//size of array 			
-	int ** current, **previous;				 	//array
-	int k, i, j, nrOfThreads, tilesize;	//helper variables
+	int ** current, **previous, **swap;				 	//array
+	int k, nrOfThreads, tilesize;	//helper variables
 
 	double time;
 	struct timeval ts,tf; 		//for timing
@@ -97,23 +97,36 @@ int main (int argc, char * argv[]) {
 
 	gettimeofday(&ts, NULL);
 	
-	int nrOfTiles = (N/32)*(N/32);
-	
-	tilesize = 32;  
-	
-	// parallelize	
-	for(k=0; k <nrOfTiles; k++){
-		//dela upp i tre olika tiles: kth tile, E,S,W,N-tiles & the rest
-		//
-		//vi skickar in top left cell in each tile
-		//top left = (N/tilesize)*k
-		//(stega i och j i tilesize steg)
-		//för alla tiles där i eller j == (k*tilesize): ESWN-tile
-		//
+	tilesize = 32;
+	int tilesPerRow = N/tilesize;
+	int nrOfTiles = tilesPerRow*tilesPerRow; 
+		
+	for(k=0; k <tilesPerRow; k++){
+		// black tile
+		//printf("black tile \n");
+		compute_tile(current, previous, k*tilesize, k*tilesize, tilesize);
 
-		compute_tile(current, previous, i*tilesize, j*tilesize, tilesize);
-		previous = current; //both current 
-
+		// grey tiles
+		for (int grey = 0; grey<(tilesPerRow);  grey++){
+			if(grey != k){
+			//printf("grey tile \n");
+			compute_tile(current, previous, k*tilesize, grey*tilesize, tilesize);
+			compute_tile(current, previous, grey*tilesize, k*tilesize, tilesize);
+			}
+		}	
+		
+		// white tiles
+		for (int whiteH = 0; whiteH<tilesPerRow; whiteH++ ){
+			for(int whiteV = 0; whiteV<tilesPerRow; whiteV++){
+				if(whiteV != k && whiteH != k){
+				//printf("white tile \n");
+				compute_tile(current, previous, whiteH*tilesize, whiteV*tilesize, tilesize);
+				}
+			}
+		}
+	swap = previous;
+	previous = current; //both current 
+	current = swap;
 	}
 
 
