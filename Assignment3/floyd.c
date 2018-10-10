@@ -57,32 +57,33 @@ static void free_array(int ** array, int N) {
 
 
 
-static void work(int ** array, int starti, int startj, int N){
-        int k,i,j,end,oldValue,newValue;
-        end = 1; 
-        for (k = 1 ; k < N ; k++) {
-                for (i = starti ; i < end ; i++){
-                        for (j = startj ; j < end; j++) {
-                                oldValue = array[i][j];
-                                newValue = array[i][k] + array[k][j];
-                                if(oldValue > newValue){
-                                        array[i][j] = newValue;                                 
-                                }       
-                        
-                        }
-                }
+static void work(int **previous, int **current, int N, int k){
+        int i,j,oldValue,newValue; 
+	for (i = 0 ; i < N ; i++){
+		for (j = 0 ; j < N; j++) {
+			oldValue = previous[i][j];
+			newValue = previous[i][k] + previous[k][j];
+			if(oldValue > newValue){
+				current[i][j] = newValue;                                 
+			}
+			else{
+				current[i][j] = oldValue; 
+			}	
+		
+		}
+	}
 
-        }
 }
 
 int main (int argc, char * argv[]) {
-	int N;				//size of array 			
-	int ** array;		 	//array
-	int k, i, j, nrOfThreads, oldValue,newValue;	//helper variables
+	int N;					//size of array 			
+	int ** current,** previous, ** swap; 	//array
+	int k, nrOfThreads;		//helper variables
 
 	double time;
 	struct timeval ts,tf; 		//for timing
 	
+
 	/*Read input arguments*/
 	if (argc != 3) {
 		fprintf(stderr, "Usage: ./exec ArraySize NrOfThreads\n");
@@ -92,33 +93,28 @@ int main (int argc, char * argv[]) {
 		N = atoi(argv[1]);
 		nrOfThreads = atoi(argv[2]);
 	}
+	current =  allocate_array(N); //allocate array
+	previous = allocate_array(N);
 
-	array = allocate_array(N); //allocate array
-	
 	gettimeofday(&ts, NULL);
 
 	
 	//#pragma omp parallel for private(k,i,j) num_threads(nrOfThreads)
 	for (k = 1 ; k < N ; k++) {
-		for (i = 1 ; i < N ; i++){
-			for (j = 1 ; j < N ; j++) {
-				oldValue = array[i][j];
-				newValue = array[i][k] + array[k][j];
-				if(oldValue > newValue){
-					array[i][j] = newValue;					
-				//	printf("old: %i, new: %i \n", oldValue,newValue);	
-				}	
-			
-			}
-		}
-	
+		work(previous, current, N, k);	
+		
+		swap = current;
+	        current = previous;
+		previous = swap; 	
+
 	} //end of parallel part
 	//#pragma omp barrier
 
 	gettimeofday(&tf, NULL);
 	time = (tf.tv_sec-ts.tv_sec)+(tf.tv_usec-ts.tv_usec)*0.000001;
 
-	free_array(array, N);	
+	free_array(current, N);	
+	free_array(previous, N);	
 	
 	printf("Floyd, array size %i, time %lf\n", N, time); 
 	return 0; 
