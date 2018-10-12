@@ -8,20 +8,10 @@ life:
 
 
 
-floyd:
-	gcc -std=c++11 -fopenmp floyd.c -o floyd
-
-
-
 floyd_omp: 
-	gcc -std=c++11 -fopenmp floydOMP.c -o floydomp
-
-
-
-floyd_tile:
-	gcc -std=c++11 -fopenmp floyd_tile.c -o floydtile
+	gcc -fopenmp floydOMP.c -o floydomp
 
 
 
 floyd_tile_omp: 
-	gcc -std=c++11 -fopenmp floyd_tile_OMP.c -o floydtileomp
+	gcc -fopenmp floyd_tile_OMP.c -o floydtileomp
