@@ -4,7 +4,7 @@ primes:
 
 
 life:
-	g++ -std=c++11 -fopenmp Game_Of_Life_OpneMP.cpp -o life
+	gcc -fopenmp gameOfLifeOMP.c -o life
 
 
 
